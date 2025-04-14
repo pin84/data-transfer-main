@@ -6,8 +6,8 @@ def get_db_env():
     #     'database': 'ride'
     # } # dev     
     return {
-        'user': 'prod_RO_hehao',
-        'password': 'Sm9Knq3qz7O7EA96gMZZ',
+        'user': 'prod_ro_ping',
+        'password': 'B5VD72B53H824l1G7vy0',
         'host': 'rideprod.clasi6jcghkh.us-east-2.rds.amazonaws.com',
         'database': 'ride'
     } # prod

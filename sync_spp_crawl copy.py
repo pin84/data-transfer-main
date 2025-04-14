@@ -120,16 +120,7 @@ def sql_handler(db_pattern="normal"):
     return decorator
 
 
-
-def run_sql_handler(cnx, cursor, query, param=[]):
-    # query = f"{query}"
-    results = run_sql(cnx, cursor, query, param=[],fetch='all')
-    if not results:
-        return []
-    return [dict(zip(cursor.column_names, result)) for result in results]
-
-
-def run_sql(cnx, cursor, query, param,  fetch="all",multi=False, transaction=False):
+def run_sql(cnx, cursor, query, param, multi=False, fetch="all", transaction=False):
     if param is None:
         param = []
     if isinstance(param, list):
@@ -325,23 +316,23 @@ def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
     update_info = copy.deepcopy(spp_crawl_info)
     update_info.pop("id")
     update_fields = [
-        "route_name",
-        "partner_id",
-        "platform_name",
-        "service_area_id",
-        "disable_date",
-        "start_place_name_manual",
-        "start_place_lat",
-        "start_place_lng",
-        "end_place_name_manual",
-        "end_place_lat",
-        "end_place_lng",
-        "ctrip_flight_no",
-        "remark",
-        "active",
-        "route_zone_str",
-        "batch",
-        "route_type",
+        # "route_name",
+        # "partner_id",
+        # "platform_name",
+        # "service_area_id",
+         "disable_date",
+        # "start_place_name_manual",
+        # "start_place_lat",
+        # "start_place_lng",
+        # "end_place_name_manual",
+        # "end_place_lat",
+        # "end_place_lng",
+        # "ctrip_flight_no",
+        # "remark",
+        # "active",
+        # "route_zone_str",
+        # "batch",
+        # "route_type",
         "route_zone_str2"
     ]
 
@@ -455,7 +446,9 @@ def read_ssp_route_data(cnx, cursor):
     # spp_cost_info = {1: 1}  # 更新一段时间内全部路线
     spp_cost_info = {
         "srt.id": [
-          1
+    
+        207
+         
         ]
     }  # 更新一段时间指定的路线列表
     # spp_cost_info = {"srt.id": 777} //# 更新一段时间指定的唯一的一条路线
@@ -499,9 +492,9 @@ def process(cnx, cursor):
         insert_spp_crawl_data["id"] = int(item["spp_route_id"])
        
         insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
+        insert_spp_crawl_data["disable_date"] = item["disable_date"]
 
-        if True:
-            insert_spp_crawl_data["disable_date"] = item["disable_date"]
+        if False:
             insert_spp_crawl_data["route_name"] = item["route_name"]
             insert_spp_crawl_data["partner_id"] = item["partner_id"]
             insert_spp_crawl_data["platform_name"] = (
@@ -718,99 +711,20 @@ def process(cnx, cursor):
         insert_spp_crawl(insert_spp_crawl_data)
 
     if warning_spp_route_id:
+       
         send_dingtalk_msg(
             msg=f"写spp_crawl_route表发现spp_route中异常数据: {warning_spp_route_id}"
         )
 
-@sql_handler(db_pattern="report")
-def get_data_from_spp_crawl_route(r_cnx, r_cursor,**kwargs):
 
-    query = """select * from spp_crawl_route where id =1
-    ;"""
-    param = []
-    results = run_sql_handler(r_cnx, r_cursor, query, param)
-
-    return results
-
-@sql_handler(db_pattern="ride")
-def insert_spp_crawl_route(spp_crawl_info, cnx, cursor):
-    query = """insert into
-            spp_crawl_route({})
-            values{} 
-            on duplicate key update {};"""
-
-    keys, placeholder, param = get_keys_placeholder_and_param(spp_crawl_info)
-
-    update_info = copy.deepcopy(spp_crawl_info)
-    update_info.pop("id")
-    update_fields = [
-        "route_name",
-        "partner_id",
-        "platform_name",
-        "service_area_id",
-        "disable_date",
-        "start_place_name_manual",
-        "start_place_lat",
-        "start_place_lng",
-        "end_place_name_manual",
-        "end_place_lat",
-        "end_place_lng",
-        "ctrip_flight_no",
-        "remark",
-        "active",
-        "route_zone_str",
-        "batch",
-        "route_type",
-        "route_zone_str2"
-    ]
-
-    update_info_keys_list = list(update_info.keys())
-    for key in update_info_keys_list:
-        if key not in update_fields:
-            update_info.pop(key)
-    update_line_list = []
-    for k, v in update_info.items():
-        update_line_list.append(f"{k}=%s")
-        param.append(v)
-    update_info_line = ",".join(update_line_list)
-
-    query = query.format(keys, placeholder, update_info_line)
-
-    try:
-        row_no = run_sql(cnx, cursor, query, param, fetch="no")
-    except IntegrityError as error:
-        if error.msg.find("Duplicate entry") > -1:
-            logger.warning("note_info record already exists")
-            return 0
-        else:
-            logger.error(format_exc())
-            raise
-
-    if row_no > 0:
-        return cursor.lastrowid
-    else:
-        return -1
-
-
-
-
-@sql_handler(db_pattern="ride")
-def transfer_data(cnx, cursor):
-    res = get_data_from_spp_crawl_route()
-
-   
-    for item in res:
-        insert_spp_crawl_route(item)
-
-    print("transfer_data")
 
 def main():
+    print('----')
     # while 1:
     #     process()
     #     send_dingtalk_msg(msg="写spp_crawl_route成功！")
     #     time.sleep(60 * 60 * 0.5)
-    # process()
-    transfer_data()
+    process()
 
 
 if __name__ == "__main__":
