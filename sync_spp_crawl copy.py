@@ -316,23 +316,23 @@ def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
     update_info = copy.deepcopy(spp_crawl_info)
     update_info.pop("id")
     update_fields = [
-        # "route_name",
-        # "partner_id",
-        # "platform_name",
-        # "service_area_id",
-         "disable_date",
-        # "start_place_name_manual",
-        # "start_place_lat",
-        # "start_place_lng",
-        # "end_place_name_manual",
-        # "end_place_lat",
-        # "end_place_lng",
-        # "ctrip_flight_no",
-        # "remark",
-        # "active",
-        # "route_zone_str",
-        # "batch",
-        # "route_type",
+        "route_name",
+        "partner_id",
+        "platform_name",
+        "service_area_id",
+        "disable_date",
+        "start_place_name_manual",
+        "start_place_lat",
+        "start_place_lng",
+        "end_place_name_manual",
+        "end_place_lat",
+        "end_place_lng",
+        "ctrip_flight_no",
+        "remark",
+        "active",
+        "route_zone_str",
+        "batch",
+        "route_type",
         "route_zone_str2"
     ]
 
@@ -447,7 +447,7 @@ def read_ssp_route_data(cnx, cursor):
     spp_cost_info = {
         "srt.id": [
     
-        207
+        458,460,1584,3035,3036,3756,3757,3810,3811,4875,4876,4892,5464,5465,5834,5835,5836,5837,5838,5839,5840,5842,5843,5844,5845,5846,5847,5848,5849,5850,5851,5852,5854,5855,5856,5857,5859,5861,5862,5863,5864,5865,5866,5868,5870,5871,5872,5873,5874,5875
          
         ]
     }  # 更新一段时间指定的路线列表
@@ -492,9 +492,15 @@ def process(cnx, cursor):
         insert_spp_crawl_data["id"] = int(item["spp_route_id"])
        
         insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
-        insert_spp_crawl_data["disable_date"] = item["disable_date"]
+        
 
-        if False:
+        if item["disable_date"] == 'None':
+            insert_spp_crawl_data["disable_date"] = None
+        else:
+            insert_spp_crawl_data["disable_date"] = item["disable_date"]
+
+
+        if True:
             insert_spp_crawl_data["route_name"] = item["route_name"]
             insert_spp_crawl_data["partner_id"] = item["partner_id"]
             insert_spp_crawl_data["platform_name"] = (
