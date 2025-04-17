@@ -447,8 +447,7 @@ def read_ssp_route_data(cnx, cursor):
     spp_cost_info = {
         "srt.id": [
     
-        458,460,1584,3035,3036,3756,3757,3810,3811,4875,4876,4892,5464,5465,5834,5835,5836,5837,5838,5839,5840,5842,5843,5844,5845,5846,5847,5848,5849,5850,5851,5852,5854,5855,5856,5857,5859,5861,5862,5863,5864,5865,5866,5868,5870,5871,5872,5873,5874,5875
-         
+           6509,6510,6511,6512,6513,6514,6515,6516,6517,6518,6519,6520,6521,6522,6523,6524,6525,6526,6527,6528,6529,6530,6531,6532,6533,6534,6535,6536,6537,6538,6539,6540,6541,6542,6543,6544,6545,6546,6547,6548,6549,6550,6551,6552,6553,6554,6555,6556,6557,6558,6559,6560,6561,6562,6563,6564,6565,6566,6567,6568,6569,6570,6571,6572,6573,6574,6575,6576,6577,6578,6579,6580,6581,6582,6583,6584,6585,6586,6587,6588,6589,6590,6591,6592,6593,6594,6595,6596,6597,6598,6599,6600,6601,6602,6603,6604,6605,6606,6607,6608,6609,6610,6611,6612,6613,6614,6615,6616,6617,6618
         ]
     }  # 更新一段时间指定的路线列表
     # spp_cost_info = {"srt.id": 777} //# 更新一段时间指定的唯一的一条路线
@@ -509,12 +508,14 @@ def process(cnx, cursor):
             insert_spp_crawl_data["service_area_id"] = item["service_area_id_elife"]
     
 
-            if item["is_active"] is not None and int(item["is_active"]) < 0:
-                insert_spp_crawl_data["active"] = 0
-            else:
-                insert_spp_crawl_data["active"] = 1
-            if item["crawl_state"] is not None and item["crawl_state"] == 2:
-                insert_spp_crawl_data["active"] = 2
+            # if item["is_active"] is not None and int(item["is_active"]) < 0:
+            #     insert_spp_crawl_data["active"] = 0
+            # else:
+            #     insert_spp_crawl_data["active"] = 1
+            # if item["crawl_state"] is not None and item["crawl_state"] == 2:
+            #     insert_spp_crawl_data["active"] = 2
+            
+            insert_spp_crawl_data["active"] =  0
 
             insert_spp_crawl_data["batch"] = item["batch"]
 
