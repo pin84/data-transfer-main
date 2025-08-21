@@ -163,7 +163,8 @@ def get_query_condition_parameter(info, operator):
             if key in operator:
                 if operator[key] == "like":
                     condition_list.append(
-                        "({})".format(" or ".join([f"{key} like %s"] * len(value)))
+                        "({})".format(" or ".join(
+                            [f"{key} like %s"] * len(value)))
                     )
                 else:
                     condition_list.append(
@@ -236,21 +237,6 @@ def get_keys_placeholder_and_param(info, kargs=None):
         return keys, placeholder, param
 
 
-# def get_last_id_in_spp_crawl(cnx, cursor):
-#     query = """select scl.id
-#     from spp_crawl_route scl
-#     order by id desc
-#     limit 1
-#     ;"""
-#     param = []
-#     result = run_sql(cnx, cursor, query, param, fetch="one")
-
-#     if result is None:
-#         return None
-#     else:
-#         return dict(zip(cursor.column_names, result))["id"]
-
-
 def spp_cost_select_by_info(info, cnx, cursor, operator={}):
     query = """select srt.id as spp_route_id,
     srt.name as route_name, 
@@ -304,8 +290,8 @@ def spp_cost_select_by_info(info, cnx, cursor, operator={}):
         return [dict(zip(cursor.column_names, row)) for row in result]
 
 
-@sql_handler(db_pattern="report")
-def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
+@sql_handler()
+def insert_spp_crawl(spp_crawl_info, cnx, cursor, **kwargs):
     query = """insert into
             spp_crawl_route({})
             values{} 
@@ -349,7 +335,7 @@ def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
     query = query.format(keys, placeholder, update_info_line)
 
     try:
-        row_no = run_sql(r_cnx, r_cursor, query, param, fetch="no")
+        row_no = run_sql(cnx, cursor, query, param, fetch="no")
     except IntegrityError as error:
         if error.msg.find("Duplicate entry") > -1:
             logger.warning("note_info record already exists")
@@ -359,9 +345,69 @@ def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
             raise
 
     if row_no > 0:
-        return r_cursor.lastrowid
+        return cursor.lastrowid
     else:
         return -1
+
+
+# @sql_handler(db_pattern="report")
+# def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
+#     query = """insert into
+#             spp_crawl_route({})
+#             values{} 
+#             on duplicate key update {};"""
+
+#     keys, placeholder, param = get_keys_placeholder_and_param(spp_crawl_info)
+
+#     update_info = copy.deepcopy(spp_crawl_info)
+#     update_info.pop("id")
+#     update_fields = [
+#         "route_name",
+#         "partner_id",
+#         "platform_name",
+#         "service_area_id",
+#         "disable_date",
+#         "start_place_name_manual",
+#         "start_place_lat",
+#         "start_place_lng",
+#         "end_place_name_manual",
+#         "end_place_lat",
+#         "end_place_lng",
+#         "ctrip_flight_no",
+#         "remark",
+#         "active",
+#         "route_zone_str",
+#         "batch",
+#         "route_type",
+#         "route_zone_str2"
+#     ]
+
+#     update_info_keys_list = list(update_info.keys())
+#     for key in update_info_keys_list:
+#         if key not in update_fields:
+#             update_info.pop(key)
+#     update_line_list = []
+#     for k, v in update_info.items():
+#         update_line_list.append(f"{k}=%s")
+#         param.append(v)
+#     update_info_line = ",".join(update_line_list)
+
+#     query = query.format(keys, placeholder, update_info_line)
+
+#     try:
+#         row_no = run_sql(r_cnx, r_cursor, query, param, fetch="no")
+#     except IntegrityError as error:
+#         if error.msg.find("Duplicate entry") > -1:
+#             logger.warning("note_info record already exists")
+#             return 0
+#         else:
+#             logger.error(format_exc())
+#             raise
+
+#     if row_no > 0:
+#         return r_cursor.lastrowid
+#     else:
+#         return -1
 
 
 def select_airport(airport_info, cnx, cursor, operator={}):
@@ -427,28 +473,16 @@ def filter_different_flight_no(flight_no_list: list) -> list:
     return filtered_diffenct_flight_no_list
 
 
-def get_google_place_id_from_place(place):
-    url = "https://maps.googleapis.com/maps/api/geocode/json?"
-
-    param = {"address": place, "key": "AIzaSyD9mzj4sfSNhPUOmfp605SpbSMmip6TtD4"}
-    try:
-        res = requests.get(f"{url}{urllib.parse.urlencode(param)}")
-        if res.status_code == 200:
-            result_json = res.json()
-            return result_json["body"]["result"][0]["place_id"]
-        else:
-            return None
-    except:
-        return None
+#
 
 
 def read_ssp_route_data(cnx, cursor):
     # spp_cost_info = {1: 1}  # 更新一段时间内全部路线
     spp_cost_info = {
         "srt.id": [
-    
-           6509,6510,6511,6512,6513,6514,6515,6516,6517,6518,6519,6520,6521,6522,6523,6524,6525,6526,6527,6528,6529,6530,6531,6532,6533,6534,6535,6536,6537,6538,6539,6540,6541,6542,6543,6544,6545,6546,6547,6548,6549,6550,6551,6552,6553,6554,6555,6556,6557,6558,6559,6560,6561,6562,6563,6564,6565,6566,6567,6568,6569,6570,6571,6572,6573,6574,6575,6576,6577,6578,6579,6580,6581,6582,6583,6584,6585,6586,6587,6588,6589,6590,6591,6592,6593,6594,6595,6596,6597,6598,6599,6600,6601,6602,6603,6604,6605,6606,6607,6608,6609,6610,6611,6612,6613,6614,6615,6616,6617,6618
-        ]
+                    10566,10567,10568,10569,10570,10571,10572,10573,10574,10575,10576,10577,10578,10579,10580,10581,10582,10583,10584,10585,10586,10587,10588,10589,10590,10591,10592,10593,10594,10595,10596,10597,10598,10599,10600,10601,10602,10603,10604,10605,10606,10607,10608,10609,10610,10611,10612,10613,10614,10615,10616,10617,10618,10619,10620,10621,10622,10623,10624,10625,10626,10627,10628,10629,10630,10631,10632,10633,10634,10635,10636,10637,10638,10639,10640,10641,10642,10643,10644,10645,10646,10647,10648,10649,10650,10651,10652,10653,10654,10655,10656,10657,10658,10659,10660,10661,10662,10663,10664,10665,10666,10667,10668,10669,10670,10671,10672,10673,10674,10675,10676,10677,10678,10679,10680,10681,10682,10683,10684,10685,10686,10687,10688,10689,10690,10691,10692,10693,10694,10695,10696,10697,10698,10699,10700,10701,10702,10703,10704,10705,10706,10707,10708,10709,10710,10711,10712,10713,10714,10715,10716,10717,10718,10719,10720,10721,10722,10723,10724,10725,10726,10727,10728,10729,10730,10731,10732,10733,10734,10735,10736,10737,10738,10739,10740,10741,10742,10743,10744,10745,10746,10747,10748,10749,10750,10751,10752,10753,10754,10755,10756,10757,10758,10759,10760,10761,10762,10763,10764,10765,10766,10767,10768,10769,10770,10771,10772,10773,10774,10775,10776,10777,10778,10779,10780,10781,10782,10783,10784,10785,10786,10787,10788,10789,10790,10791,10792,10793,10794,10795,10796,10797,10798,10799,10800,10801,10802,10803,10804,10805,10806,10807,10808,10809,10810,10811,10812,10813,10814,10815,10816,10817,10818,10819,10820,10821,10822,10823,10824,10825,10826,10827,10828,10829,10830,10831,10832,10833,10834,10835,10836,10837,10838,10839,10840,10841,10842,10843,10844,10845,10846,10847,10848,10849,10850,10851,10852,10853,10854,10855,10856,10857,10858,10859,10860,10861,10862,10863,10864,10865,10866,10867,10868,10869,10870,10871,10872,10873,10874,10875,10876,10877,10878,10879,10880,10881,10882,10883,10884,10885,10886,10887,10888,10889,10890,10891,10892,10893,10894,10895,10896,10897,10898
+            
+                        ]
     }  # 更新一段时间指定的路线列表
     # spp_cost_info = {"srt.id": 777} //# 更新一段时间指定的唯一的一条路线
     spp_cost_result = spp_cost_select_by_info(spp_cost_info, cnx, cursor)
@@ -486,18 +520,20 @@ def process(cnx, cursor):
     warning_spp_route_id = []
 
     ssp_route_data = read_ssp_route_data(cnx, cursor)
+
     for item in ssp_route_data:
         insert_spp_crawl_data = {}
-        insert_spp_crawl_data["id"] = int(item["spp_route_id"])
-       
-        insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
-        
 
-        if item["disable_date"] == 'None':
+        partner_id = item["partner_id"]
+
+        insert_spp_crawl_data["id"] = int(item["spp_route_id"])
+        if partner_id != 2:
+            insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
+
+        if item["disable_date"] != 'None':
             insert_spp_crawl_data["disable_date"] = None
         else:
             insert_spp_crawl_data["disable_date"] = item["disable_date"]
-
 
         if True:
             insert_spp_crawl_data["route_name"] = item["route_name"]
@@ -506,16 +542,10 @@ def process(cnx, cursor):
                 item["platform_name"] if item["platform_name"] is not None else ""
             )
             insert_spp_crawl_data["service_area_id"] = item["service_area_id_elife"]
-    
 
-            # if item["is_active"] is not None and int(item["is_active"]) < 0:
-            #     insert_spp_crawl_data["active"] = 0
-            # else:
-            #     insert_spp_crawl_data["active"] = 1
-            # if item["crawl_state"] is not None and item["crawl_state"] == 2:
-            #     insert_spp_crawl_data["active"] = 2
-            
-            insert_spp_crawl_data["active"] =  0
+            insert_spp_crawl_data["active"] = 0
+
+         
 
             insert_spp_crawl_data["batch"] = item["batch"]
 
@@ -527,25 +557,26 @@ def process(cnx, cursor):
 
             start_place_lat_lnt_data = {}
             try:
-                start_place_lat_lnt_data = json.loads(item["from_place_lat_lng"])
+                start_place_lat_lnt_data = json.loads(
+                    item["from_place_lat_lng"])
             except Exception:
                 logger.info(format_exc)
 
-            insert_spp_crawl_data["start_place_lat"] = start_place_lat_lnt_data.get("lat")
-            insert_spp_crawl_data["start_place_lng"] = start_place_lat_lnt_data.get("lng")
-
             insert_spp_crawl_data["start_place_name_manual"] = item["from_address"]
             insert_spp_crawl_data["end_place_name_manual"] = item["to_address"]
-
-            print(item["to_address"])
-
             end_place_lat_lnt_data = {}
             try:
                 end_place_lat_lnt_data = json.loads(item["to_place_lat_lng"])
             except Exception:
                 logger.info(format_exc())
-            insert_spp_crawl_data["end_place_lat"] = end_place_lat_lnt_data["lat"]
-            insert_spp_crawl_data["end_place_lng"] = end_place_lat_lnt_data["lng"]
+
+            if partner_id != 2:
+                insert_spp_crawl_data["start_place_lat"] = start_place_lat_lnt_data.get(
+                    "lat")
+                insert_spp_crawl_data["start_place_lng"] = start_place_lat_lnt_data.get(
+                    "lng")
+                insert_spp_crawl_data["end_place_lat"] = end_place_lat_lnt_data["lat"]
+                insert_spp_crawl_data["end_place_lng"] = end_place_lat_lnt_data["lng"]
 
             route_type = None
             from_place = item["from_place"]
@@ -555,7 +586,8 @@ def process(cnx, cursor):
             if len(from_place) == 3:
                 airport_code = airport_cache.get(from_place, "")
                 if not airport_code:
-                    airport_code = select_airport({"code3": from_place}, cnx, cursor)
+                    airport_code = select_airport(
+                        {"code3": from_place}, cnx, cursor)
                     airport_cache[from_place] = airport_code
 
                 if airport_code:
@@ -565,7 +597,7 @@ def process(cnx, cursor):
                     ]
                     insert_spp_crawl_data["start_place_type"] = PlaceType.airport
 
-                    insert_spp_crawl_data["start_place_name_manual"] = airport_code["code3"]
+                    # insert_spp_crawl_data["start_place_name_manual"] = airport_code["code3"]
             if not insert_spp_crawl_data.get("start_place_type"):
                 if item["from_address"] is not None:
                     if (
@@ -577,7 +609,8 @@ def process(cnx, cursor):
             if len(to_place) == 3:
                 airport_code = airport_cache.get(to_place, "")
                 if not airport_code:
-                    airport_code = select_airport({"code3": to_place}, cnx, cursor)
+                    airport_code = select_airport(
+                        {"code3": to_place}, cnx, cursor)
                     airport_cache[to_place] = airport_code
 
                 if airport_code:
@@ -586,9 +619,7 @@ def process(cnx, cursor):
                         "google_place_id"
                     ]
                     insert_spp_crawl_data["end_place_type"] = PlaceType.airport
-
-                    print(airport_code["code3"])
-                    insert_spp_crawl_data["end_place_name_manual"] = airport_code["code3"]
+                    # insert_spp_crawl_data["end_place_name_manual"] = airport_code["code3"]
             if not insert_spp_crawl_data.get("end_place_type"):
                 if item["to_address"] is not None:
                     if (
@@ -601,8 +632,10 @@ def process(cnx, cursor):
 
             if route_type == RouteType.pick_up:
                 remark = {}
-                flight_infos = select_flight_no({"f.to_airport": from_place}, cnx, cursor)
-                flight_infos = filter_different_flight_no(flight_no_list=flight_infos)
+                flight_infos = select_flight_no(
+                    {"f.to_airport": from_place}, cnx, cursor)
+                flight_infos = filter_different_flight_no(
+                    flight_no_list=flight_infos)
                 if flight_infos:
                     if item["partner_id"] and int(item["partner_id"]) == 2621:
                         flight_info = flight_infos[0]
@@ -610,9 +643,11 @@ def process(cnx, cursor):
                             f"{flight_info['flight_code']}{flight_info['flight_number']}"
                         )
                         if "from_airport" in flight_info:
-                            remark["from_airport"] = flight_info.get("from_airport")
+                            remark["from_airport"] = flight_info.get(
+                                "from_airport")
                         if "to_airport" in flight_info:
-                            remark["to_airport"] = flight_info.get("to_airport")
+                            remark["to_airport"] = flight_info.get(
+                                "to_airport")
                         # 加上备选航班
                         ctrip_flight_list = [
                             {
@@ -643,9 +678,11 @@ def process(cnx, cursor):
                                 f"{flight_info['flight_code']}{flight_info['flight_number']}"
                             )
                             if "from_airport" in flight_info:
-                                remark["from_airport"] = flight_info.get("from_airport")
+                                remark["from_airport"] = flight_info.get(
+                                    "from_airport")
                             if "to_airport" in flight_info:
-                                remark["to_airport"] = flight_info.get("to_airport")
+                                remark["to_airport"] = flight_info.get(
+                                    "to_airport")
                             # 加上备选航班
                             ctrip_flight_list = [
                                 {
@@ -672,20 +709,11 @@ def process(cnx, cursor):
                 )
                 if zone_name:
                     remark["zone_name"] = zone_name
-                insert_spp_crawl_data["remark"] = json.dumps(remark, ensure_ascii=False)
+                insert_spp_crawl_data["remark"] = json.dumps(
+                    remark, ensure_ascii=False)
 
             elif route_type == RouteType.drop_off:
                 remark = {}
-                # flight_info = select_flight_no({"f.to_airport": to_place}, cnx, cursor)
-                # if flight_info:
-                #     insert_spp_crawl_data['ctrip_flight_no'] = f"{flight_info['flight_code']}{flight_info['flight_number']}"
-                #     if item['partner_id'] and int(item['partner_id']) == 2621:
-                #         insert_spp_crawl_data['ctrip_flight_no'] = f"{flight_info['flight_code']}{flight_info['flight_number']}"
-                #         # remark.update({"from_airport": flight_info.get('from_airport'), "to_airport": flight_info.get("to_airport")})
-                #         if "from_airport" in flight_info:
-                #             remark['from_airport'] = flight_info.get('from_airport')
-                #         if "to_airport" in flight_info:
-                #             remark['to_airport'] = flight_info.get('to_airport')
                 zone_name = get_zone_name(
                     from_address=from_address,
                     to_address=to_address,
@@ -695,34 +723,32 @@ def process(cnx, cursor):
                 )
                 if zone_name:
                     remark["zone_name"] = zone_name
-                insert_spp_crawl_data["remark"] = json.dumps(remark, ensure_ascii=False)
+                insert_spp_crawl_data["remark"] = json.dumps(
+                    remark, ensure_ascii=False)
 
             # 判定spp_route的接送机类型是否和spp_crawl_spp的接送机类型是否一致
             route_json = get_filtered_route_json(route_json=route_json)
             if not insert_spp_crawl_data.get("route_type"):
                 if (
-                    insert_spp_crawl_data.get("route_type") == RouteType.drop_off
+                    insert_spp_crawl_data.get(
+                        "route_type") == RouteType.drop_off
                     and "d_amt" not in route_json
                 ):
                     warning_spp_route_id.append(item["route_id"])
                     continue
                 if (
-                    insert_spp_crawl_data.get("route_type") == RouteType.pick_up
+                    insert_spp_crawl_data.get(
+                        "route_type") == RouteType.pick_up
                     and "p_amt" not in route_json
                 ):
                     warning_spp_route_id.append(item["route_id"])
                     continue
-
         print(insert_spp_crawl_data)
-
         insert_spp_crawl(insert_spp_crawl_data)
-
     if warning_spp_route_id:
-       
         send_dingtalk_msg(
             msg=f"写spp_crawl_route表发现spp_route中异常数据: {warning_spp_route_id}"
         )
-
 
 
 def main():

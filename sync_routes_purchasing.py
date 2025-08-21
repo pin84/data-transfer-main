@@ -120,16 +120,7 @@ def sql_handler(db_pattern="normal"):
     return decorator
 
 
-
-def run_sql_handler(cnx, cursor, query, param=[]):
-    # query = f"{query}"
-    results = run_sql(cnx, cursor, query, param=[],fetch='all')
-    if not results:
-        return []
-    return [dict(zip(cursor.column_names, result)) for result in results]
-
-
-def run_sql(cnx, cursor, query, param,  fetch="all",multi=False, transaction=False):
+def run_sql(cnx, cursor, query, param, multi=False, fetch="all", transaction=False):
     if param is None:
         param = []
     if isinstance(param, list):
@@ -172,7 +163,8 @@ def get_query_condition_parameter(info, operator):
             if key in operator:
                 if operator[key] == "like":
                     condition_list.append(
-                        "({})".format(" or ".join([f"{key} like %s"] * len(value)))
+                        "({})".format(" or ".join(
+                            [f"{key} like %s"] * len(value)))
                     )
                 else:
                     condition_list.append(
@@ -245,21 +237,6 @@ def get_keys_placeholder_and_param(info, kargs=None):
         return keys, placeholder, param
 
 
-# def get_last_id_in_spp_crawl(cnx, cursor):
-#     query = """select scl.id
-#     from spp_crawl_route scl
-#     order by id desc
-#     limit 1
-#     ;"""
-#     param = []
-#     result = run_sql(cnx, cursor, query, param, fetch="one")
-
-#     if result is None:
-#         return None
-#     else:
-#         return dict(zip(cursor.column_names, result))["id"]
-
-
 def spp_cost_select_by_info(info, cnx, cursor, operator={}):
     query = """select srt.id as spp_route_id,
     srt.name as route_name, 
@@ -278,7 +255,7 @@ def spp_cost_select_by_info(info, cnx, cursor, operator={}):
     srt.crawl_state,
     srt.disable_date,
     srt.tz_id
-    from spp_route srt
+    from spp_route_purchasing srt
     where {}
     {}
     order by srt.id asc
@@ -288,22 +265,7 @@ def spp_cost_select_by_info(info, cnx, cursor, operator={}):
         return None
 
     condition, param = get_query_condition_parameter(info, operator)
-
     spp_crawl_condition = ""
-    # last_spp_crawl_id  = get_last_id_in_spp_crawl(cnx, cursor)
-    # if last_spp_crawl_id:
-    #     spp_crawl_condition = f"and srt.id > {last_spp_crawl_id}"
-
-    # spp_route_last_updated_at = (datetime.now() - timedelta(hours=8 + 24)).strftime('%Y-%m-%d %H:%M:%S')
-    spp_route_last_updated_at = (datetime.now() - timedelta(hours=8 + 10)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-    # spp_crawl_condition = f" and srt.last_updated_at >= %s"
-    # param.append(spp_route_last_updated_at)
-
-    # spp_crawl_condition = " and srt.partner_id = %s "
-    # param.append(2621)
-
     query = query.format(condition, spp_crawl_condition)
     result = run_sql(cnx, cursor, query, param, fetch="all")
 
@@ -315,12 +277,16 @@ def spp_cost_select_by_info(info, cnx, cursor, operator={}):
 
 @sql_handler(db_pattern="report")
 def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
+    print(f"Starting insert_spp_crawl for ID: {spp_crawl_info.get('id')}")
     query = """insert into
-            spp_crawl_route({})
+            spp_crawl_route_purchasing({})
             values{} 
             on duplicate key update {};"""
 
     keys, placeholder, param = get_keys_placeholder_and_param(spp_crawl_info)
+    print(f"Keys: {keys}")
+    print(f"Placeholder: {placeholder}")
+    print(f"Params count: {len(param)}")
 
     update_info = copy.deepcopy(spp_crawl_info)
     update_info.pop("id")
@@ -356,11 +322,15 @@ def insert_spp_crawl(spp_crawl_info, r_cnx, r_cursor, **kwargs):
     update_info_line = ",".join(update_line_list)
 
     query = query.format(keys, placeholder, update_info_line)
+    print(f"Final query: {query}")
+    print(f"Final params: {param}")
 
     try:
+        print("Executing SQL...")
         row_no = run_sql(r_cnx, r_cursor, query, param, fetch="no")
+        print(f"SQL executed, row_no: {row_no}")
     except IntegrityError as error:
-        if error.msg.find("Duplicate entry") > -1:
+        if hasattr(error, 'msg') and error.msg.find("Duplicate entry") > -1:
             logger.warning("note_info record already exists")
             return 0
         else:
@@ -440,10 +410,14 @@ def filter_different_flight_no(flight_no_list: list) -> list:
 
 
 def read_ssp_route_data(cnx, cursor):
+    print('Reading SSP route data...')
     # spp_cost_info = {1: 1}  # 更新一段时间内全部路线
     spp_cost_info = {
         "srt.id": [
-          1
+          
+  7576,7577,7578,7579,7580,7581,7582,7583,7584,7585,7586,7587,7588,7589,7590,7591,7592,7593,7594,7595,7596,7597,7598,7599,7600,7601,7602,7603,7604,7605,7606,7607,7608,7609,7610,7611,7612,7613,7614,7615,7616,7617,7618,7619,7620,7621,7622,7623,7624,7625,7626,7627,7628,7629,7630,7631,7632,7633,7634,7635,7636,7637,7638,7639,7640,7641,7642,7643,7644,7645,7646,7647,7648,7649,7650,7651,7652,7653,7654,7655,7656,7657,7658,7659,7660,7661,7662,7663,7664,7665,7666,7667,7668,7669,7670,7671,7672,7673,7674,7675,7676,7677,7678,7679,7680,7681,7682,7683,7684,7685,7686,7687,7688,7689,7690,7691,7692,7693,7694,7695,7696,7697,7698,7699,7700,7701,7702,7703,7704,7705,7706,7707,7708,7709,7710,7711,7712,7713,7714,7715,7716,7717,7718,7719,7720,7721,7722,7723,7724,7725,7726,7727,7728,7729,7730,7731,7732,7733,7734,7735,7736,7737,7738,7739,7740,7741,7742,7743,7744,7745,7746,7747,7748,7749,7750,7751,7752,7753,7754,7755,7756,7757,7758,7759,7760,7761,7762,7763,7764,7765,7766,7767,7768,7769,7770,7771,7772,7773,7774,7775,7776,7777,7778,7779,7780,7781,7782,7783,7784,7785,7786,7787,7788,7789,7790,7791,7792,7793,7794,7795,7796,7797,7798,7799,7800,7801,7802,7803,7804,7805,7806,7807,7808,7809,7810,7811,7812,7813,7814,7815,7816,7817,7818,7819,7820,7821,7822,7823,7824,7825,7826,7827,7828,7829,7830,7831,7832,7833,7834,7835,7836,7837,7838,7839,7840,7841,7842,7843,7844,7845,7846,7847,7848,7849,7850,7851,7852,7853,7854,7855,7856,7857,7858,7859,7860,7861,7862,7863,7864,7865,7866,7867,7868,7869,7870,7871,7872,7873,7874,7875,7876,7877,7878,7879,7880,7881,7882,7883,7884,7885,7886,7887,7888,7889,7890,7891,7892,7893,7894,7895,7896,7897,7898,7899,7900,7901,7902,7903,7904,7905,7906,7907,7908,7909,7910,7911,7912,7913,7914,7915,7916,7917,7918,7919,7920,7921,7922,7923,7924,7925,7926,7927,7928,7929,7930,7931,7932,7933,7934,7935,7936,7937,7938,7939,7940,7941,7942,7943,7944
+
+
         ]
     }  # 更新一段时间指定的路线列表
     # spp_cost_info = {"srt.id": 777} //# 更新一段时间指定的唯一的一条路线
@@ -471,39 +445,45 @@ def get_filtered_route_json(route_json: dict):
     return filtered_route_json
 
 
-def send_dingtalk_msg(msg):
-    webhook = get_dingtalk_webhook()
-    bot = DingtalkChatbot(webhook)
-    bot.send_text(msg)
 
 
 @sql_handler()
 def process(cnx, cursor):
-    warning_spp_route_id = []
+    print('--2222-')
+    print('Starting to read SSP route data...')
 
     ssp_route_data = read_ssp_route_data(cnx, cursor)
+    print(f'Read {len(ssp_route_data) if ssp_route_data else 0} route records')
+
     for item in ssp_route_data:
         insert_spp_crawl_data = {}
+
+        partner_id = item["partner_id"]
+
         insert_spp_crawl_data["id"] = int(item["spp_route_id"])
-       
-        insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
+        if partner_id != 2:
+            insert_spp_crawl_data["route_zone_str2"] = item["tz_id"]
+
+        if item["disable_date"] == 'None':
+            insert_spp_crawl_data["disable_date"] = None
+        else:
+            insert_spp_crawl_data["disable_date"] = item["disable_date"]
 
         if True:
-            insert_spp_crawl_data["disable_date"] = item["disable_date"]
             insert_spp_crawl_data["route_name"] = item["route_name"]
             insert_spp_crawl_data["partner_id"] = item["partner_id"]
             insert_spp_crawl_data["platform_name"] = (
                 item["platform_name"] if item["platform_name"] is not None else ""
             )
             insert_spp_crawl_data["service_area_id"] = item["service_area_id_elife"]
-    
 
-            if item["is_active"] is not None and int(item["is_active"]) < 0:
-                insert_spp_crawl_data["active"] = 0
-            else:
-                insert_spp_crawl_data["active"] = 1
-            if item["crawl_state"] is not None and item["crawl_state"] == 2:
-                insert_spp_crawl_data["active"] = 2
+            insert_spp_crawl_data["active"] = 0
+            # if item["is_active"] is not None and int(item["is_active"]) <= 0:
+            #     insert_spp_crawl_data["active"] = 0
+            # else:
+            #     insert_spp_crawl_data["active"] = 1
+            # if item["crawl_state"] is not None and item["crawl_state"] == 2:
+            #     insert_spp_crawl_data["active"] = 2
 
             insert_spp_crawl_data["batch"] = item["batch"]
 
@@ -511,29 +491,33 @@ def process(cnx, cursor):
             try:
                 route_json = json.loads(item["route_json"])
             except Exception:
+                route_json = {}
                 logger.info(format_exc())
 
             start_place_lat_lnt_data = {}
             try:
-                start_place_lat_lnt_data = json.loads(item["from_place_lat_lng"])
+                start_place_lat_lnt_data = json.loads(
+                    item["from_place_lat_lng"])
             except Exception:
-                logger.info(format_exc)
-
-            insert_spp_crawl_data["start_place_lat"] = start_place_lat_lnt_data.get("lat")
-            insert_spp_crawl_data["start_place_lng"] = start_place_lat_lnt_data.get("lng")
+                logger.info(format_exc())
 
             insert_spp_crawl_data["start_place_name_manual"] = item["from_address"]
             insert_spp_crawl_data["end_place_name_manual"] = item["to_address"]
-
-            print(item["to_address"])
-
             end_place_lat_lnt_data = {}
             try:
                 end_place_lat_lnt_data = json.loads(item["to_place_lat_lng"])
             except Exception:
                 logger.info(format_exc())
-            insert_spp_crawl_data["end_place_lat"] = end_place_lat_lnt_data["lat"]
-            insert_spp_crawl_data["end_place_lng"] = end_place_lat_lnt_data["lng"]
+
+            if partner_id != 2:
+                insert_spp_crawl_data["start_place_lat"] = start_place_lat_lnt_data.get(
+                    "lat", '')
+                insert_spp_crawl_data["start_place_lng"] = start_place_lat_lnt_data.get(
+                    "lng", '')
+                insert_spp_crawl_data["end_place_lat"] = end_place_lat_lnt_data.get(
+                    'lat', '')
+                insert_spp_crawl_data["end_place_lng"] = end_place_lat_lnt_data.get(
+                    'lng', '')
 
             route_type = None
             from_place = item["from_place"]
@@ -543,7 +527,8 @@ def process(cnx, cursor):
             if len(from_place) == 3:
                 airport_code = airport_cache.get(from_place, "")
                 if not airport_code:
-                    airport_code = select_airport({"code3": from_place}, cnx, cursor)
+                    airport_code = select_airport(
+                        {"code3": from_place}, cnx, cursor)
                     airport_cache[from_place] = airport_code
 
                 if airport_code:
@@ -553,7 +538,7 @@ def process(cnx, cursor):
                     ]
                     insert_spp_crawl_data["start_place_type"] = PlaceType.airport
 
-                    insert_spp_crawl_data["start_place_name_manual"] = airport_code["code3"]
+                    # insert_spp_crawl_data["start_place_name_manual"] = airport_code["code3"]
             if not insert_spp_crawl_data.get("start_place_type"):
                 if item["from_address"] is not None:
                     if (
@@ -565,7 +550,8 @@ def process(cnx, cursor):
             if len(to_place) == 3:
                 airport_code = airport_cache.get(to_place, "")
                 if not airport_code:
-                    airport_code = select_airport({"code3": to_place}, cnx, cursor)
+                    airport_code = select_airport(
+                        {"code3": to_place}, cnx, cursor)
                     airport_cache[to_place] = airport_code
 
                 if airport_code:
@@ -574,9 +560,7 @@ def process(cnx, cursor):
                         "google_place_id"
                     ]
                     insert_spp_crawl_data["end_place_type"] = PlaceType.airport
-
-                    print(airport_code["code3"])
-                    insert_spp_crawl_data["end_place_name_manual"] = airport_code["code3"]
+                    # insert_spp_crawl_data["end_place_name_manual"] = airport_code["code3"]
             if not insert_spp_crawl_data.get("end_place_type"):
                 if item["to_address"] is not None:
                     if (
@@ -589,8 +573,10 @@ def process(cnx, cursor):
 
             if route_type == RouteType.pick_up:
                 remark = {}
-                flight_infos = select_flight_no({"f.to_airport": from_place}, cnx, cursor)
-                flight_infos = filter_different_flight_no(flight_no_list=flight_infos)
+                flight_infos = select_flight_no(
+                    {"f.to_airport": from_place}, cnx, cursor)
+                flight_infos = filter_different_flight_no(
+                    flight_no_list=flight_infos)
                 if flight_infos:
                     if item["partner_id"] and int(item["partner_id"]) == 2621:
                         flight_info = flight_infos[0]
@@ -598,9 +584,11 @@ def process(cnx, cursor):
                             f"{flight_info['flight_code']}{flight_info['flight_number']}"
                         )
                         if "from_airport" in flight_info:
-                            remark["from_airport"] = flight_info.get("from_airport")
+                            remark["from_airport"] = flight_info.get(
+                                "from_airport")
                         if "to_airport" in flight_info:
-                            remark["to_airport"] = flight_info.get("to_airport")
+                            remark["to_airport"] = flight_info.get(
+                                "to_airport")
                         # 加上备选航班
                         ctrip_flight_list = [
                             {
@@ -631,9 +619,11 @@ def process(cnx, cursor):
                                 f"{flight_info['flight_code']}{flight_info['flight_number']}"
                             )
                             if "from_airport" in flight_info:
-                                remark["from_airport"] = flight_info.get("from_airport")
+                                remark["from_airport"] = flight_info.get(
+                                    "from_airport")
                             if "to_airport" in flight_info:
-                                remark["to_airport"] = flight_info.get("to_airport")
+                                remark["to_airport"] = flight_info.get(
+                                    "to_airport")
                             # 加上备选航班
                             ctrip_flight_list = [
                                 {
@@ -660,20 +650,11 @@ def process(cnx, cursor):
                 )
                 if zone_name:
                     remark["zone_name"] = zone_name
-                insert_spp_crawl_data["remark"] = json.dumps(remark, ensure_ascii=False)
+                insert_spp_crawl_data["remark"] = json.dumps(
+                    remark, ensure_ascii=False)
 
             elif route_type == RouteType.drop_off:
                 remark = {}
-                # flight_info = select_flight_no({"f.to_airport": to_place}, cnx, cursor)
-                # if flight_info:
-                #     insert_spp_crawl_data['ctrip_flight_no'] = f"{flight_info['flight_code']}{flight_info['flight_number']}"
-                #     if item['partner_id'] and int(item['partner_id']) == 2621:
-                #         insert_spp_crawl_data['ctrip_flight_no'] = f"{flight_info['flight_code']}{flight_info['flight_number']}"
-                #         # remark.update({"from_airport": flight_info.get('from_airport'), "to_airport": flight_info.get("to_airport")})
-                #         if "from_airport" in flight_info:
-                #             remark['from_airport'] = flight_info.get('from_airport')
-                #         if "to_airport" in flight_info:
-                #             remark['to_airport'] = flight_info.get('to_airport')
                 zone_name = get_zone_name(
                     from_address=from_address,
                     to_address=to_address,
@@ -683,122 +664,40 @@ def process(cnx, cursor):
                 )
                 if zone_name:
                     remark["zone_name"] = zone_name
-                insert_spp_crawl_data["remark"] = json.dumps(remark, ensure_ascii=False)
+                insert_spp_crawl_data["remark"] = json.dumps(
+                    remark, ensure_ascii=False)
 
             # 判定spp_route的接送机类型是否和spp_crawl_spp的接送机类型是否一致
             route_json = get_filtered_route_json(route_json=route_json)
             if not insert_spp_crawl_data.get("route_type"):
                 if (
-                    insert_spp_crawl_data.get("route_type") == RouteType.drop_off
+                    insert_spp_crawl_data.get(
+                        "route_type") == RouteType.drop_off
                     and "d_amt" not in route_json
                 ):
-                    warning_spp_route_id.append(item["route_id"])
                     continue
                 if (
-                    insert_spp_crawl_data.get("route_type") == RouteType.pick_up
+                    insert_spp_crawl_data.get(
+                        "route_type") == RouteType.pick_up
                     and "p_amt" not in route_json
                 ):
-                    warning_spp_route_id.append(item["route_id"])
                     continue
-
         print(insert_spp_crawl_data)
-
         insert_spp_crawl(insert_spp_crawl_data)
 
-    if warning_spp_route_id:
-        send_dingtalk_msg(
-            msg=f"写spp_crawl_route表发现spp_route中异常数据: {warning_spp_route_id}"
-        )
 
-@sql_handler(db_pattern="report")
-def get_data_from_spp_crawl_route(r_cnx, r_cursor,**kwargs):
-
-    query = """select * from spp_crawl_route where id =1
-    ;"""
-    param = []
-    results = run_sql_handler(r_cnx, r_cursor, query, param)
-
-    return results
-
-@sql_handler(db_pattern="ride")
-def insert_spp_crawl_route(spp_crawl_info, cnx, cursor):
-    query = """insert into
-            spp_crawl_route({})
-            values{} 
-            on duplicate key update {};"""
-
-    keys, placeholder, param = get_keys_placeholder_and_param(spp_crawl_info)
-
-    update_info = copy.deepcopy(spp_crawl_info)
-    update_info.pop("id")
-    update_fields = [
-        "route_name",
-        "partner_id",
-        "platform_name",
-        "service_area_id",
-        "disable_date",
-        "start_place_name_manual",
-        "start_place_lat",
-        "start_place_lng",
-        "end_place_name_manual",
-        "end_place_lat",
-        "end_place_lng",
-        "ctrip_flight_no",
-        "remark",
-        "active",
-        "route_zone_str",
-        "batch",
-        "route_type",
-        "route_zone_str2"
-    ]
-
-    update_info_keys_list = list(update_info.keys())
-    for key in update_info_keys_list:
-        if key not in update_fields:
-            update_info.pop(key)
-    update_line_list = []
-    for k, v in update_info.items():
-        update_line_list.append(f"{k}=%s")
-        param.append(v)
-    update_info_line = ",".join(update_line_list)
-
-    query = query.format(keys, placeholder, update_info_line)
-
-    try:
-        row_no = run_sql(cnx, cursor, query, param, fetch="no")
-    except IntegrityError as error:
-        if error.msg.find("Duplicate entry") > -1:
-            logger.warning("note_info record already exists")
-            return 0
-        else:
-            logger.error(format_exc())
-            raise
-
-    if row_no > 0:
-        return cursor.lastrowid
-    else:
-        return -1
-
-
-
-
-@sql_handler(db_pattern="ride")
-def transfer_data(cnx, cursor):
-    res = get_data_from_spp_crawl_route()
-
-   
-    for item in res:
-        insert_spp_crawl_route(item)
-
-    print("transfer_data")
 
 def main():
-    # while 1:
-    #     process()
-    #     send_dingtalk_msg(msg="写spp_crawl_route成功！")
-    #     time.sleep(60 * 60 * 0.5)
-    # process()
-    transfer_data()
+    print('--435435--')
+    print('About to call process()...')
+    try:
+        process()
+        print('process() completed successfully')
+    except Exception as e:
+        print(f'Error in process(): {e}')
+        import traceback
+        traceback.print_exc()
+    print('---3-')
 
 
 if __name__ == "__main__":
